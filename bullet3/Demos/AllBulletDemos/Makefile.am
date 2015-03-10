@@ -19,6 +19,7 @@ AllBulletDemo_SOURCES=\
 			../GjkConvexCastDemo/LinearConvexCastDemo.cpp \
 			../ConcaveDemo/ConcavePhysicsDemo.cpp \
 			../DynamicControlDemo/MotorDemo.cpp \
+			../Hexapod/Hexapod.cpp \
 			DemoEntries.cpp \
 			DemoEntries.h\
 			Main.cpp

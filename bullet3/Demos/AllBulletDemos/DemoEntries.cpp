@@ -23,6 +23,7 @@ subject to the following restrictions:
 #include "../ConcaveConvexcastDemo/ConcaveConvexcastDemo.h"
 #include "../ConvexDecompositionDemo/ConvexDecompositionDemo.h"
 #include "../DynamicControlDemo/MotorDemo.h"
+#include "../Hexapod/Hexapod.h"
 #include "../SliderConstraintDemo/SliderConstraintDemo.h"
 #include "../RagdollDemo/RagdollDemo.h"
 #include "../GimpactTestDemo/GimpactTestDemo.h"

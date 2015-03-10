@@ -14,7 +14,7 @@ IF (USE_GLUT)
 				RagdollDemo ForkLiftDemo BasicDemo FeatherstoneMultiBodyDemo RollingFrictionDemo RaytestDemo VoronoiFractureDemo 
 				GyroscopicDemo FractureDemo Box2dDemo BspDemo MovingConcaveDemo VehicleDemo
 				UserCollisionAlgorithm CharacterDemo SoftDemo 
-				CollisionInterfaceDemo ConcaveConvexcastDemo SimplexDemo DynamicControlDemo
+				CollisionInterfaceDemo ConcaveConvexcastDemo SimplexDemo DynamicControlDemo Hexapod
 				ConvexHullDistance 
 				DoublePrecisionDemo  CollisionDemo
 				ContinuousConvexCollision ConcaveRaycastDemo GjkConvexCastDemo

@@ -61,6 +61,7 @@ end
     "ContinuousConvexCollision",
     "ConvexHullDistance",
     "DynamicControlDemo",
+    "Hexapod",
     "EPAPenDepthDemo",
     "ForkLiftDemo",
     "FeatherstoneMultiBodyDemo",

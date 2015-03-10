@@ -37,6 +37,7 @@ SET(AllBulletDemos_SRCS
   ../BspDemo/BspConverter.cpp
   ../BspDemo/BspLoader.cpp
   ../DynamicControlDemo/MotorDemo.cpp
+  ../Hexapod/Hexapod.cpp
   ../ConcaveDemo/ConcavePhysicsDemo.cpp
   ../ConcaveRaycastDemo/ConcaveRaycastDemo.cpp
   ../ConcaveConvexcastDemo/ConcaveConvexcastDemo.cpp
