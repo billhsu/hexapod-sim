@@ -62,7 +62,7 @@ void drawFrame(btTransform &tr)
 
 
 #define NUM_LEGS 6
-#define BODYPART_COUNT 2 * NUM_LEGS + 1
+#define BODYPART_COUNT 3 * NUM_LEGS + 1
 #define JOINT_COUNT BODYPART_COUNT - 1
 
 class TestRig
@@ -106,14 +106,15 @@ public:
         int i;
         for ( i=0; i<NUM_LEGS; i++)
         {
-            m_shapes[1 + 2*i] = new btCapsuleShape(btScalar(0.10), btScalar(fLegLength));
-            m_shapes[2 + 2*i] = new btCapsuleShape(btScalar(0.08), btScalar(fForeLegLength));
+            m_shapes[1 + 3*i] = new btCapsuleShape(btScalar(0.10), btScalar(fLegLength));
+            m_shapes[2 + 3*i] = new btCapsuleShape(btScalar(0.08), btScalar(fForeLegLength));
+            m_shapes[3 + 3*i] = new btCapsuleShape(btScalar(0.08), btScalar(0.04));
         }
 
         //
         // Setup rigid bodies
         //
-        float fHeight = 0.5;
+        float fHeight = 1;
         btTransform offset; offset.setIdentity();
         offset.setOrigin(positionOffset);        
 
@@ -127,7 +128,7 @@ public:
             m_bodies[0] = localCreateRigidBody(btScalar(0.), offset*transform, m_shapes[0]);
         } else
         {
-            m_bodies[0] = localCreateRigidBody(btScalar(1.), offset*transform, m_shapes[0]);
+            m_bodies[0] = localCreateRigidBody(btScalar(1), offset*transform, m_shapes[0]);
         }
         // legs
         for ( i=0; i<NUM_LEGS; i++)
@@ -144,22 +145,28 @@ public:
             btVector3 vToBone = (vBoneOrigin - vRoot).normalize();
             btVector3 vAxis = vToBone.cross(vUp);            
             transform.setRotation(btQuaternion(vAxis, M_PI_2));
-            m_bodies[1+2*i] = localCreateRigidBody(btScalar(1.), offset*transform, m_shapes[1+2*i]);
+            m_bodies[1+3*i] = localCreateRigidBody(btScalar(0.01), offset*transform, m_shapes[1+3*i]);
 
             // shin
             transform.setIdentity();
             transform.setOrigin(btVector3(btScalar(fCos*(fBodySize+fLegLength)), btScalar(fHeight-0.5*fForeLegLength), btScalar(fSin*(fBodySize+fLegLength))));
-            m_bodies[2+2*i] = localCreateRigidBody(btScalar(1.), offset*transform, m_shapes[2+2*i]);
+            m_bodies[2+3*i] = localCreateRigidBody(btScalar(0.01), offset*transform, m_shapes[2+3*i]);
+
+            // hip joint
+            transform.setIdentity();
+            transform.setOrigin(btVector3(btScalar(fCos*fBodySize), btScalar(fHeight), btScalar(fSin*fBodySize)));
+            m_bodies[3+3*i] = localCreateRigidBody(btScalar(0.01), offset*transform, m_shapes[3+3*i]);
         }
 
         // Setup some damping on the m_bodies
         for (i = 0; i < BODYPART_COUNT; ++i)
         {
-            m_bodies[i]->setDamping(0.05, 0.85);
-            m_bodies[i]->setDeactivationTime(0.8);
-            //m_bodies[i]->setSleepingThresholds(1.6, 2.5);
-            m_bodies[i]->setSleepingThresholds(0.5f, 0.5f);
+            // m_bodies[i]->setDamping(0.05, 0.05);
+            // m_bodies[i]->setDeactivationTime(0.8);
+            // //m_bodies[i]->setSleepingThresholds(1.6, 2.5);
+            // m_bodies[i]->setSleepingThresholds(0.5f, 0.5f);
         }
+        // m_bodies[0]->setDamping(0.85, 1.85);
 
 
         //
@@ -176,26 +183,45 @@ public:
             float fSin = sin(fAngle);
             float fCos = cos(fAngle);
 
-            // hip joints
+            // hip joints 1
             localA.setIdentity(); localB.setIdentity();
-            localA.getBasis().setEulerZYX(0,-fAngle,0);    localA.setOrigin(btVector3(btScalar(fCos*fBodySize), btScalar(0.), btScalar(fSin*fBodySize)));
-            localB = m_bodies[1+2*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
-            hingeC = new btHingeConstraint(*m_bodies[0], *m_bodies[1+2*i], localA, localB);
-            hingeC->setLimit(btScalar(-0.75 * M_PI_4), btScalar(M_PI_8));
+            btVector3 v1(btScalar(fCos*fBodySize), btScalar(0.), btScalar(fSin*fBodySize));
+            btQuaternion q1(vUp, -fAngle);
+            btQuaternion q2(btVector3(1,0,0), M_PI_2);
+            btQuaternion q3 = q1 * q2;
+            localA = btTransform(q3, v1);
+            localB = m_bodies[3+3*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
+            hingeC = new btHingeConstraint(*m_bodies[0], *m_bodies[3+3*i], localA, localB);
+            hingeC->setLimit(btScalar(-M_PI_8), btScalar(M_PI_8));
+            m_joints[2+3*i] = hingeC;
+            hingeC->enableMotor(false);
+            hingeC->setLimit(0,0);
+            m_ownerWorld->addConstraint(m_joints[2+3*i], true);
+            // hip joints 2
+            localA.setIdentity(); localB.setIdentity();
+            localA = btTransform(q1, v1);
+            localB = m_bodies[1+3*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
+            localC = m_bodies[3+3*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
+            hingeC = new btHingeConstraint(*m_bodies[3+3*i], *m_bodies[1+3*i], localC, localB);
+            hingeC->setLimit(btScalar(-M_PI_8), btScalar(M_PI_8));
             //hingeC->setLimit(btScalar(-0.1), btScalar(0.1));
-            m_joints[2*i] = hingeC;
-            m_ownerWorld->addConstraint(m_joints[2*i], true);
+            m_joints[3*i] = hingeC;
+            hingeC->enableMotor(false);
+            hingeC->setLimit(0,0);
+            m_ownerWorld->addConstraint(m_joints[3*i], true);
 
             // knee joints
             localA.setIdentity(); localB.setIdentity(); localC.setIdentity();
             localA.getBasis().setEulerZYX(0,-fAngle,0);    localA.setOrigin(btVector3(btScalar(fCos*(fBodySize+fLegLength)), btScalar(0.), btScalar(fSin*(fBodySize+fLegLength))));
-            localB = m_bodies[1+2*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
-            localC = m_bodies[2+2*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
-            hingeC = new btHingeConstraint(*m_bodies[1+2*i], *m_bodies[2+2*i], localB, localC);
+            localB = m_bodies[1+3*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
+            localC = m_bodies[2+3*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
+            hingeC = new btHingeConstraint(*m_bodies[1+3*i], *m_bodies[2+3*i], localB, localC);
             //hingeC->setLimit(btScalar(-0.01), btScalar(0.01));
-            hingeC->setLimit(btScalar(-M_PI_8), btScalar(0.2));
-            m_joints[1+2*i] = hingeC;
-            m_ownerWorld->addConstraint(m_joints[1+2*i], true);
+            hingeC->setLimit(btScalar(-M_PI_8), btScalar(M_PI_8));
+            m_joints[1+3*i] = hingeC;
+            hingeC->enableMotor(false);
+            hingeC->setLimit(0,0);
+            m_ownerWorld->addConstraint(m_joints[1+3*i], true);
         }
     }
 
@@ -282,11 +308,10 @@ void Hexapod::initPhysics()
     }
 
     // Spawn one ragdoll
-    btVector3 startOffset(1,0.5,0);
+    btVector3 startOffset(0,0,0);
     spawnTestRig(startOffset, false);
-    startOffset.setValue(-2,0.5,0);
+    startOffset = btVector3(-3,0,0);
     spawnTestRig(startOffset, true);
-
     clientResetScene();        
 }
 
@@ -320,7 +345,7 @@ void Hexapod::setMotorTargets(btScalar deltaTime)
     //    
     for (int r=0; r<m_rigs.size(); r++)
     {
-        for (int i=0; i<2*NUM_LEGS; i++)
+        for (int i=0; i<3*NUM_LEGS; i++)
         {
             btHingeConstraint* hingeC = static_cast<btHingeConstraint*>(m_rigs[r]->GetJoints()[i]);
             btScalar fCurAngle      = hingeC->getHingeAngle();
@@ -330,7 +355,9 @@ void Hexapod::setMotorTargets(btScalar deltaTime)
             btScalar fTargetLimitAngle = hingeC->getLowerLimit() + fTargetAngle * (hingeC->getUpperLimit() - hingeC->getLowerLimit());
             btScalar fAngleError  = fTargetLimitAngle - fCurAngle;
             btScalar fDesiredAngularVel = 1000000.f * fAngleError/ms;
-            hingeC->enableAngularMotor(true, fDesiredAngularVel, m_fMuscleStrength);
+            // hingeC->enableAngularMotor(true, fDesiredAngularVel, m_fMuscleStrength);
+            hingeC->setLimit(0,0);
+            hingeC->enableMotor(false);
         }
     }
 
@@ -342,12 +369,12 @@ void Hexapod::clientMoveAndDisplay()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
     //simple dynamics world doesn't handle fixed-time-stepping
-    float deltaTime = getDeltaTimeMicroseconds()/1000000.f;
+    float deltaTime = 1.0f/60.0f;
     
 
     if (m_dynamicsWorld)
     {
-        m_dynamicsWorld->stepSimulation(deltaTime);
+        m_dynamicsWorld->stepSimulation(deltaTime,1000, 0.002);
         m_dynamicsWorld->debugDrawWorld();
     }
 
