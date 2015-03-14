@@ -55,7 +55,7 @@ public:
         demo->initPhysics();
         return demo;
     }
-    
+    void setServoPercent(int rigId, int jointId, btScalar targetPercent, float deltaMs);
     void setMotorTargets(btScalar deltaTime);
 
 };
