@@ -17,7 +17,7 @@ class Hexapod : public GlutDemoApplication
     float m_fCyclePeriod; // in milliseconds
     float m_fMuscleStrength;
 
-    btAlignedObjectArray<class TestRig*> m_rigs;
+    btAlignedObjectArray<class HexapodRig*> m_rigs;
 
     //keep the collision shapes, for deletion/cleanup
     btAlignedObjectArray<btCollisionShape*>    m_collisionShapes;
@@ -40,7 +40,7 @@ public:
         exitPhysics();
     }
 
-    void spawnTestRig(const btVector3& startOffset, bool bFixed);
+    void spawnHexapodRig(const btVector3& startOffset, bool bFixed);
 
     virtual void clientMoveAndDisplay();
 

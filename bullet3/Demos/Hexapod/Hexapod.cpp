@@ -65,7 +65,7 @@ void drawFrame(btTransform &tr)
 #define BODYPART_COUNT 3 * NUM_LEGS + 1
 #define JOINT_COUNT BODYPART_COUNT - 1
 
-class TestRig
+class HexapodRig
 {
     btDynamicsWorld*    m_ownerWorld;
     btCollisionShape*    m_shapes[BODYPART_COUNT];
@@ -91,7 +91,7 @@ class TestRig
 
 
 public:
-    TestRig (btDynamicsWorld* ownerWorld, const btVector3& positionOffset, bool bFixed)
+    HexapodRig (btDynamicsWorld* ownerWorld, const btVector3& positionOffset, bool bFixed)
         : m_ownerWorld (ownerWorld)
     {
         btVector3 vUp(0, 1, 0);
@@ -102,7 +102,7 @@ public:
         float fBodySize  = 0.45f;
         float fLegLength = 0.45f;
         float fForeLegLength = 0.75f;
-        m_shapes[0] = new btCapsuleShape(btScalar(fBodySize), btScalar(0.10));
+        m_shapes[0] = new btBoxShape(btVector3(0.4,0.1,0.6));
         int i;
         for ( i=0; i<NUM_LEGS; i++)
         {
@@ -137,24 +137,42 @@ public:
             float fSin = sin(fAngle);
             float fCos = cos(fAngle);
 
+            btVector3 vBoneOrigin;
+            if(i == 0 || i == 1 || i == 2)
+            {
+                vBoneOrigin = btVector3(-0.5 - fLegLength / 2, fHeight, (i-1)*0.6);
+            } else 
+            {
+                vBoneOrigin = btVector3(0.5 + fLegLength / 2, fHeight, (4-i)*0.6);
+            }
             transform.setIdentity();
-            btVector3 vBoneOrigin = btVector3(btScalar(fCos*(fBodySize+0.5*fLegLength)), btScalar(fHeight), btScalar(fSin*(fBodySize+0.5*fLegLength)));
             transform.setOrigin(vBoneOrigin);
-
             // thigh
-            btVector3 vToBone = (vBoneOrigin - vRoot).normalize();
-            btVector3 vAxis = vToBone.cross(vUp);            
-            transform.setRotation(btQuaternion(vAxis, M_PI_2));
+            transform.setRotation(btQuaternion(btVector3(0,0,1), M_PI_2));
             m_bodies[1+3*i] = localCreateRigidBody(btScalar(0.01), offset*transform, m_shapes[1+3*i]);
 
+            if(i == 0 || i == 1 || i == 2)
+            {
+                vBoneOrigin = btVector3(-0.5 - fLegLength, fHeight - fForeLegLength / 2, (i-1)*0.6);
+            } else 
+            {
+                vBoneOrigin = btVector3(0.5 + fLegLength, fHeight - fForeLegLength / 2, (4-i)*0.6);
+            }
             // shin
             transform.setIdentity();
-            transform.setOrigin(btVector3(btScalar(fCos*(fBodySize+fLegLength)), btScalar(fHeight-0.5*fForeLegLength), btScalar(fSin*(fBodySize+fLegLength))));
+            transform.setOrigin(vBoneOrigin);
             m_bodies[2+3*i] = localCreateRigidBody(btScalar(0.02), offset*transform, m_shapes[2+3*i]);
 
             // hip joint
+            if(i == 0 || i == 1 || i == 2)
+            {
+                vBoneOrigin = btVector3(-0.5, fHeight, (i-1)*0.6);
+            } else 
+            {
+                vBoneOrigin = btVector3(0.5, fHeight, (4-i)*0.6);
+            }
             transform.setIdentity();
-            transform.setOrigin(btVector3(btScalar(fCos*fBodySize), btScalar(fHeight), btScalar(fSin*fBodySize)));
+            transform.setOrigin(vBoneOrigin);
             m_bodies[3+3*i] = localCreateRigidBody(btScalar(0.02), offset*transform, m_shapes[3+3*i]);
         }
 
@@ -178,53 +196,69 @@ public:
 
         for ( i=0; i<NUM_LEGS; i++)
         {
-            float fAngle = 2 * M_PI * i / NUM_LEGS;
-            float fSin = sin(fAngle);
-            float fCos = cos(fAngle);
-
+            btVector3 vBoneOrigin;
+            btQuaternion vQ;
+            if(i == 0 || i == 1 || i == 2)
+            {
+                vBoneOrigin = btVector3(-0.5, 0, (i-1)*0.6);
+            } else 
+            {
+                vBoneOrigin = btVector3(0.5, 0, (4-i)*0.6);
+            }
+            vQ = btQuaternion(btVector3(1,0,0), M_PI_2);
             // hip joints 1
             localA.setIdentity(); localB.setIdentity();
-            btVector3 v1(btScalar(fCos*fBodySize), btScalar(0.), btScalar(fSin*fBodySize));
-            btQuaternion q1(vUp, -fAngle);
-            btQuaternion q2(btVector3(1,0,0), M_PI_2);
-            btQuaternion q3 = q1 * q2;
-            localA = btTransform(q3, v1);
+            localA = btTransform(vQ, vBoneOrigin);
             localB = m_bodies[3+3*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
             hingeC = new btHingeConstraint(*m_bodies[0], *m_bodies[3+3*i], localA, localB);
             m_joints[2+3*i] = hingeC;
             hingeC->enableMotor(true);
-            hingeC->setLimit(-M_PI_8,M_PI_8);
+            hingeC->setLimit(-M_PI_8*0.7,M_PI_8*0.7);
             hingeC->setMaxMotorImpulse(1000);
             m_ownerWorld->addConstraint(m_joints[2+3*i], true);
             // hip joints 2
+            if(i == 0 || i == 1 || i == 2)
+            {
+                vQ = btQuaternion(btVector3(0,1,0), 0);
+            } else 
+            {
+                vQ = btQuaternion(btVector3(0,1,0), M_PI);
+            }
             localA.setIdentity(); localB.setIdentity();
-            localA = btTransform(q1, v1);
+            localA = btTransform(vQ, vBoneOrigin);
             localB = m_bodies[1+3*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
             localC = m_bodies[3+3*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
             hingeC = new btHingeConstraint(*m_bodies[3+3*i], *m_bodies[1+3*i], localC, localB);
             //hingeC->setLimit(btScalar(-0.1), btScalar(0.1));
             m_joints[3*i] = hingeC;
             hingeC->enableMotor(true);
-            hingeC->setLimit(-2*M_PI_8,0);
+            hingeC->setLimit(M_PI_8,3*M_PI_8);
             hingeC->setMaxMotorImpulse(1000);
             m_ownerWorld->addConstraint(m_joints[3*i], true);
 
             // knee joints
+            if(i == 0 || i == 1 || i == 2)
+            {
+                vBoneOrigin = btVector3(-0.5 - fLegLength, 0, (i-1)*0.6);
+            } else 
+            {
+                vBoneOrigin = btVector3(0.5 + fLegLength, 0, (4-i)*0.6);
+            }
             localA.setIdentity(); localB.setIdentity(); localC.setIdentity();
-            localA.getBasis().setEulerZYX(0,-fAngle,0);    localA.setOrigin(btVector3(btScalar(fCos*(fBodySize+fLegLength)), btScalar(0.), btScalar(fSin*(fBodySize+fLegLength))));
+            localA = btTransform(vQ, vBoneOrigin);
             localB = m_bodies[1+3*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
             localC = m_bodies[2+3*i]->getWorldTransform().inverse() * m_bodies[0]->getWorldTransform() * localA;
             hingeC = new btHingeConstraint(*m_bodies[1+3*i], *m_bodies[2+3*i], localB, localC);
             //hingeC->setLimit(btScalar(-0.01), btScalar(0.01));
             m_joints[1+3*i] = hingeC;
             hingeC->enableMotor(true);
-            hingeC->setLimit(2*M_PI_8,0);
+            hingeC->setLimit(-M_PI_4,0);
             hingeC->setMaxMotorImpulse(1000);
             m_ownerWorld->addConstraint(m_joints[1+3*i], true);
         }
     }
 
-    virtual    ~TestRig ()
+    virtual    ~HexapodRig ()
     {
         int i;
 
@@ -307,17 +341,15 @@ void Hexapod::initPhysics()
     }
 
     // Spawn one ragdoll
-    btVector3 startOffset(-3,0,0);
-    spawnTestRig(startOffset, false);
-    startOffset = btVector3(0,0,0);
-    spawnTestRig(startOffset, true);
+    btVector3 startOffset(0,0,0);
+    spawnHexapodRig(startOffset, false);
     clientResetScene();        
 }
 
 
-void Hexapod::spawnTestRig(const btVector3& startOffset, bool bFixed)
+void Hexapod::spawnHexapodRig(const btVector3& startOffset, bool bFixed)
 {
-    TestRig* rig = new TestRig(m_dynamicsWorld, startOffset, bFixed);
+    HexapodRig* rig = new HexapodRig(m_dynamicsWorld, startOffset, bFixed);
     m_rigs.push_back(rig);
 }
 
@@ -347,19 +379,21 @@ void Hexapod::setMotorTargets(btScalar deltaTime)
         fTargetPercent = (int(m_Time / 1000) % int(m_fCyclePeriod)) / m_fCyclePeriod;
         btScalar fTargetPercent2 = 0.5+fTargetPercent;
         if(fTargetPercent2>=1.0) fTargetPercent2 -= 1.0f;
+        // fTargetPercent2 = 0;
+        // fTargetPercent = 0;
         setServoPercent(r, 2+3*0, fTargetPercent, ms);
-        setServoPercent(r, 2+3*1, -fTargetPercent, ms);
+        setServoPercent(r, 2+3*1, 1-fTargetPercent, ms);
         setServoPercent(r, 2+3*2, fTargetPercent, ms);
         setServoPercent(r, 2+3*3, fTargetPercent, ms);
-        setServoPercent(r, 2+3*4, -fTargetPercent, ms);
+        setServoPercent(r, 2+3*4, 1-fTargetPercent, ms);
         setServoPercent(r, 2+3*5, fTargetPercent, ms);
 
         setServoPercent(r, 0+3*0, fTargetPercent2, ms);
-        setServoPercent(r, 0+3*1, -fTargetPercent2, ms);
+        setServoPercent(r, 0+3*1, 1-fTargetPercent2, ms);
         setServoPercent(r, 0+3*2, fTargetPercent2, ms);
-        setServoPercent(r, 0+3*3, fTargetPercent2, ms);
-        setServoPercent(r, 0+3*4, -fTargetPercent2, ms);
-        setServoPercent(r, 0+3*5, fTargetPercent2, ms);
+        setServoPercent(r, 0+3*3, 1-fTargetPercent2, ms);
+        setServoPercent(r, 0+3*4, fTargetPercent2, ms);
+        setServoPercent(r, 0+3*5, 1-fTargetPercent2, ms);
 
         setServoPercent(r, 1+3*0, 0, ms);
         setServoPercent(r, 1+3*1, 0, ms);
@@ -461,7 +495,7 @@ void Hexapod::exitPhysics()
 
     for (i=0;i<m_rigs.size();i++)
     {
-        TestRig* rig = m_rigs[i];
+        HexapodRig* rig = m_rigs[i];
         delete rig;
     }
 
