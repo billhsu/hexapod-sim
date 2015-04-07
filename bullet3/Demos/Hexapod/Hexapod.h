@@ -3,8 +3,7 @@
 
 #include "GlutDemoApplication.h"
 #include "LinearMath/btAlignedObjectArray.h"
-#include "zmq.h"
-#include "zmq_utils.h"
+#include "zmq.hpp"
 
 class btBroadphaseInterface;
 class btCollisionShape;
@@ -56,6 +55,9 @@ public:
         Hexapod* demo = new Hexapod();
         demo->myinit();
         demo->initPhysics();
+        zmq::context_t context (1);
+        zmq::socket_t publisher (context, ZMQ_PUB);
+        publisher.bind("tcp://*:5556");
         return demo;
     }
     void setServoPercent(int rigId, int jointId, btScalar targetPercent, float deltaMs);
