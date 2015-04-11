@@ -34,6 +34,8 @@ public:
             serverSocket.recv (&request);
             std::string requestStr = std::string(static_cast<char*>(request.data()), request.size());
             std::cout<<"Request: "<<requestStr<<std::endl;
+
+            serverSocket.send(request, ZMQ_SNDMORE);
         }
     }
 private:
