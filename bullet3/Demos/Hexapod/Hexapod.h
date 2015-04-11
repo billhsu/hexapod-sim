@@ -1,9 +1,14 @@
 #ifndef HEXAPOD_H
 #define HEXAPOD_H
 
+#include <thread>
+#include <memory>
+#include <functional>
+
 #include "GlutDemoApplication.h"
 #include "LinearMath/btAlignedObjectArray.h"
 #include "zmq.hpp"
+#include "zhelpers.hpp"
 
 class btBroadphaseInterface;
 class btCollisionShape;
@@ -12,6 +17,30 @@ class btCollisionDispatcher;
 class btConstraintSolver;
 struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
+class Hexapod;
+
+class HexapodServer
+{
+public:
+    HexapodServer(Hexapod* _hexapod): ctx(1), serverSocket(ctx, ZMQ_STREAM), hexapod(_hexapod){}
+    void run()
+    {
+        serverSocket.bind ("tcp://*:5555");
+        std::cout<<"serverSocket.bind()"<<std::endl;
+        while (true)
+        {
+            std::cout<<"Waiting for request.."<<std::endl;
+            zmq::message_t request;
+            serverSocket.recv (&request);
+            std::string requestStr = std::string(static_cast<char*>(request.data()), request.size());
+            std::cout<<"Request: "<<requestStr<<std::endl;
+        }
+    }
+private:
+    zmq::context_t ctx;
+    zmq::socket_t serverSocket;
+    Hexapod* hexapod;
+};
 
 class Hexapod : public GlutDemoApplication
 {
@@ -32,7 +61,15 @@ class Hexapod : public GlutDemoApplication
 
     btDefaultCollisionConfiguration* m_collisionConfiguration;
 
+    HexapodServer *hexapodServer;
+
 public:
+    Hexapod()
+    {
+        hexapodServer = new HexapodServer(this);
+        std::thread t1(std::bind(&HexapodServer::run, hexapodServer));
+        t1.detach();
+    }
     void initPhysics();
 
     void exitPhysics();
@@ -55,9 +92,6 @@ public:
         Hexapod* demo = new Hexapod();
         demo->myinit();
         demo->initPhysics();
-        zmq::context_t context (1);
-        zmq::socket_t publisher (context, ZMQ_PUB);
-        publisher.bind("tcp://*:5556");
         return demo;
     }
     void setServoPercent(int rigId, int jointId, btScalar targetPercent, float deltaMs);
