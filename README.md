@@ -1,5 +1,8 @@
 # Hexapod Simulator
 
+[Demo video](https://www.youtube.com/watch?v=JohDGAX7GWw)
+
+
 ## How to build
 
 ```
