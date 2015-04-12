@@ -415,28 +415,6 @@ void Hexapod::setMotorTargets(btScalar deltaTime)
         fTargetPercent = (int(m_Time / 1000) % int(m_fCyclePeriod)) / m_fCyclePeriod;
         btScalar fTargetPercent2 = 0.5+fTargetPercent;
         if(fTargetPercent2>=1.0) fTargetPercent2 -= 1.0f;
-        // fTargetPercent2 = 0;
-        // fTargetPercent = 0;
-        // setServoPercent(r, 2+3*0, fTargetPercent, ms);
-        // setServoPercent(r, 2+3*1, 1-fTargetPercent, ms);
-        // setServoPercent(r, 2+3*2, fTargetPercent, ms);
-        // setServoPercent(r, 2+3*3, fTargetPercent, ms);
-        // setServoPercent(r, 2+3*4, 1-fTargetPercent, ms);
-        // setServoPercent(r, 2+3*5, fTargetPercent, ms);
-
-        // setServoPercent(r, 0+3*0, fTargetPercent2, ms);
-        // setServoPercent(r, 0+3*1, 1-fTargetPercent2, ms);
-        // setServoPercent(r, 0+3*2, fTargetPercent2, ms);
-        // setServoPercent(r, 0+3*3, 1-fTargetPercent2, ms);
-        // setServoPercent(r, 0+3*4, fTargetPercent2, ms);
-        // setServoPercent(r, 0+3*5, 1-fTargetPercent2, ms);
-
-        // setServoPercent(r, 1+3*0, 0, ms);
-        // setServoPercent(r, 1+3*1, 0, ms);
-        // setServoPercent(r, 1+3*2, 0, ms);
-        // setServoPercent(r, 1+3*3, 0, ms);
-        // setServoPercent(r, 1+3*4, 0, ms);
-        // setServoPercent(r, 1+3*5, 0, ms);
         for(int i=0; i<JOINT_COUNT; ++i)
         {
             setServoPercent(r, i, servoPercentage[i], ms);
@@ -458,7 +436,7 @@ void Hexapod::setServoPercent(int rigId, int jointId, btScalar targetPercent, fl
     btScalar fCurAngle      = hingeC->getHingeAngle();
     
     btScalar fTargetAngle   = 0.5 * (1 + sin(2 * M_PI * targetPercent));
-    btScalar fTargetLimitAngle = hingeC->getLowerLimit() + fTargetAngle * (hingeC->getUpperLimit() - hingeC->getLowerLimit());
+    btScalar fTargetLimitAngle = hingeC->getLowerLimit() + targetPercent * (hingeC->getUpperLimit() - hingeC->getLowerLimit());
     btScalar fAngleError  = fTargetLimitAngle - fCurAngle;
     btScalar fDesiredAngularVel = 1000000.f * fAngleError/deltaMs;
     hingeC->enableAngularMotor(true, fDesiredAngularVel, 1000);
