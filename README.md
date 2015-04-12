@@ -1,5 +1,5 @@
 # Hexapod Simulator
-
+A simulator for Hexapods.  
 [Demo video](https://www.youtube.com/watch?v=JohDGAX7GWw)
 
 
