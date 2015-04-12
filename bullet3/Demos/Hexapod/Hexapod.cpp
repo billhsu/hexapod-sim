@@ -57,13 +57,48 @@ void drawFrame(btTransform &tr)
     glEnd();
 }
 
-// /LOCAL FUNCTIONS
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) 
+{
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
 
+std::vector<std::string> split(const std::string &s, char delim) 
+{
+    std::vector<std::string> elems;
+    split(s, delim, elems);
+    return elems;
+}
 
-
-#define NUM_LEGS 6
-#define BODYPART_COUNT 3 * NUM_LEGS + 1
-#define JOINT_COUNT BODYPART_COUNT - 1
+void HexapodServer::run()
+{
+    serverSocket.bind ("tcp://*:5555");
+    std::cout<<"serverSocket.bind()"<<std::endl;
+    while (true)
+    {
+        std::cout<<"Waiting for request.."<<std::endl;
+        zmq::message_t request;
+        serverSocket.recv (&request);
+        std::string requestStr = std::string(static_cast<char*>(request.data()), request.size());
+        std::cout<<"Request: "<<requestStr<<std::endl;
+        std::vector<std::string> splitCommands = split(requestStr, '#');
+        for(int i=0; i<splitCommands.size(); ++i)
+        {
+            std::cout<<splitCommands[i]<<std::endl;
+            std::vector<std::string> command = split(splitCommands[i], 'P');
+            if(command.size()!=2) continue;
+            int servoId = atoi(command[0].c_str());
+            int pwm = atoi(command[1].c_str());
+            std::cout<<servoId - 1<<" "<<((float)pwm)/3000.0f<<std::endl;
+            hexapod->setServoPercentValue(0, servoId - 1, ((float)pwm)/3000.0f);
+        }
+        serverSocket.send(request, ZMQ_SNDMORE);
+    }
+}
 
 class HexapodRig
 {
@@ -182,7 +217,7 @@ public:
             m_bodies[i]->setDamping(0.05, 0.85);
             m_bodies[i]->setDeactivationTime(0.8);
             //m_bodies[i]->setSleepingThresholds(1.6, 2.5);
-            m_bodies[i]->setSleepingThresholds(0.5f, 0.5f);
+            m_bodies[i]->setSleepingThresholds(0, 0);
         }
 
 
@@ -375,36 +410,46 @@ void Hexapod::setMotorTargets(btScalar deltaTime)
     //    
     for (int r=0; r<m_rigs.size(); r++)
     {
+
         btScalar fTargetPercent;
         fTargetPercent = (int(m_Time / 1000) % int(m_fCyclePeriod)) / m_fCyclePeriod;
         btScalar fTargetPercent2 = 0.5+fTargetPercent;
         if(fTargetPercent2>=1.0) fTargetPercent2 -= 1.0f;
         // fTargetPercent2 = 0;
         // fTargetPercent = 0;
-        setServoPercent(r, 2+3*0, fTargetPercent, ms);
-        setServoPercent(r, 2+3*1, 1-fTargetPercent, ms);
-        setServoPercent(r, 2+3*2, fTargetPercent, ms);
-        setServoPercent(r, 2+3*3, fTargetPercent, ms);
-        setServoPercent(r, 2+3*4, 1-fTargetPercent, ms);
-        setServoPercent(r, 2+3*5, fTargetPercent, ms);
+        // setServoPercent(r, 2+3*0, fTargetPercent, ms);
+        // setServoPercent(r, 2+3*1, 1-fTargetPercent, ms);
+        // setServoPercent(r, 2+3*2, fTargetPercent, ms);
+        // setServoPercent(r, 2+3*3, fTargetPercent, ms);
+        // setServoPercent(r, 2+3*4, 1-fTargetPercent, ms);
+        // setServoPercent(r, 2+3*5, fTargetPercent, ms);
 
-        setServoPercent(r, 0+3*0, fTargetPercent2, ms);
-        setServoPercent(r, 0+3*1, 1-fTargetPercent2, ms);
-        setServoPercent(r, 0+3*2, fTargetPercent2, ms);
-        setServoPercent(r, 0+3*3, 1-fTargetPercent2, ms);
-        setServoPercent(r, 0+3*4, fTargetPercent2, ms);
-        setServoPercent(r, 0+3*5, 1-fTargetPercent2, ms);
+        // setServoPercent(r, 0+3*0, fTargetPercent2, ms);
+        // setServoPercent(r, 0+3*1, 1-fTargetPercent2, ms);
+        // setServoPercent(r, 0+3*2, fTargetPercent2, ms);
+        // setServoPercent(r, 0+3*3, 1-fTargetPercent2, ms);
+        // setServoPercent(r, 0+3*4, fTargetPercent2, ms);
+        // setServoPercent(r, 0+3*5, 1-fTargetPercent2, ms);
 
-        setServoPercent(r, 1+3*0, 0, ms);
-        setServoPercent(r, 1+3*1, 0, ms);
-        setServoPercent(r, 1+3*2, 0, ms);
-        setServoPercent(r, 1+3*3, 0, ms);
-        setServoPercent(r, 1+3*4, 0, ms);
-        setServoPercent(r, 1+3*5, 0, ms);
+        // setServoPercent(r, 1+3*0, 0, ms);
+        // setServoPercent(r, 1+3*1, 0, ms);
+        // setServoPercent(r, 1+3*2, 0, ms);
+        // setServoPercent(r, 1+3*3, 0, ms);
+        // setServoPercent(r, 1+3*4, 0, ms);
+        // setServoPercent(r, 1+3*5, 0, ms);
+        for(int i=0; i<JOINT_COUNT; ++i)
+        {
+            setServoPercent(r, i, servoPercentage[i], ms);
+        }
 
     }
 
     
+}
+
+void Hexapod::setServoPercentValue(int rigId, int jointId, btScalar targetPercent)
+{
+    servoPercentage[jointId] = targetPercent;
 }
 
 void Hexapod::setServoPercent(int rigId, int jointId, btScalar targetPercent, float deltaMs)

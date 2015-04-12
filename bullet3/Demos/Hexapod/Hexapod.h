@@ -4,7 +4,7 @@
 #include <thread>
 #include <memory>
 #include <functional>
-
+#include <vector>
 #include "GlutDemoApplication.h"
 #include "LinearMath/btAlignedObjectArray.h"
 #include "zmq.hpp"
@@ -19,25 +19,16 @@ struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
 class Hexapod;
 
+#define NUM_LEGS 6
+#define BODYPART_COUNT 3 * NUM_LEGS + 1
+#define JOINT_COUNT BODYPART_COUNT - 1
+
+
 class HexapodServer
 {
 public:
     HexapodServer(Hexapod* _hexapod): ctx(1), serverSocket(ctx, ZMQ_STREAM), hexapod(_hexapod){}
-    void run()
-    {
-        serverSocket.bind ("tcp://*:5555");
-        std::cout<<"serverSocket.bind()"<<std::endl;
-        while (true)
-        {
-            std::cout<<"Waiting for request.."<<std::endl;
-            zmq::message_t request;
-            serverSocket.recv (&request);
-            std::string requestStr = std::string(static_cast<char*>(request.data()), request.size());
-            std::cout<<"Request: "<<requestStr<<std::endl;
-
-            serverSocket.send(request, ZMQ_SNDMORE);
-        }
-    }
+    void run();
 private:
     zmq::context_t ctx;
     zmq::socket_t serverSocket;
@@ -71,6 +62,10 @@ public:
         hexapodServer = new HexapodServer(this);
         std::thread t1(std::bind(&HexapodServer::run, hexapodServer));
         t1.detach();
+        for(int i=0; i<JOINT_COUNT; ++i)
+        {
+            servoPercentage[i] = 0.0f;
+        }
     }
     void initPhysics();
 
@@ -96,6 +91,8 @@ public:
         demo->initPhysics();
         return demo;
     }
+    float servoPercentage[JOINT_COUNT];
+    void setServoPercentValue(int rigId, int jointId, btScalar targetPercent);
     void setServoPercent(int rigId, int jointId, btScalar targetPercent, float deltaMs);
     void setMotorTargets(btScalar deltaTime);
 
