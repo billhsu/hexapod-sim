@@ -93,6 +93,7 @@ void HexapodServer::run()
             if(command.size()!=2) continue;
             int servoId = atoi(command[0].c_str());
             int pwm = atoi(command[1].c_str());
+            servoId = servosMap[servoId];
             std::cout<<servoId - 1<<" "<<((float)pwm)/3000.0f<<std::endl;
             hexapod->setServoPercentValue(0, servoId - 1, ((float)pwm)/3000.0f);
         }

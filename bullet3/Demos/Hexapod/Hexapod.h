@@ -5,6 +5,9 @@
 #include <memory>
 #include <functional>
 #include <vector>
+#include <map>
+#include <iostream>
+#include <fstream>
 #include "GlutDemoApplication.h"
 #include "LinearMath/btAlignedObjectArray.h"
 #include "zmq.hpp"
@@ -27,12 +30,26 @@ class Hexapod;
 class HexapodServer
 {
 public:
-    HexapodServer(Hexapod* _hexapod): ctx(1), serverSocket(ctx, ZMQ_STREAM), hexapod(_hexapod){}
+    HexapodServer(Hexapod* _hexapod): ctx(1), serverSocket(ctx, ZMQ_STREAM), hexapod(_hexapod){
+        servosMap.clear();
+        std::ifstream configFile;
+        configFile.open("config.txt");
+        int count;
+        configFile>>count;
+        for(int i=0; i<count; ++i)
+        {
+            int a,b;
+            configFile>>a>>b;
+            servosMap[a] = b;
+        }
+    }
     void run();
 private:
     zmq::context_t ctx;
     zmq::socket_t serverSocket;
     Hexapod* hexapod;
+    std::map<int, int> servosMap; // first: input servo ID
+                                 // second: actual servo ID in this system
 };
 
 class Hexapod : public GlutDemoApplication
