@@ -36,10 +36,12 @@ public:
         configFile.open("config.txt");
         int count;
         configFile>>count;
+        std::cout<<"Servo mapping: "<<std::endl;
         for(int i=0; i<count; ++i)
         {
             int a,b;
             configFile>>a>>b;
+            std::cout<<a<<" -> "<<b<<std::endl;
             servosMap[a] = b;
         }
     }
@@ -81,7 +83,7 @@ public:
         t1.detach();
         for(int i=0; i<JOINT_COUNT; ++i)
         {
-            servoPercentage[i] = 0.0f;
+            servoPercentage[i] = 0.5f;
         }
     }
     void initPhysics();

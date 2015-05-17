@@ -20,6 +20,10 @@
 #define M_PI_4     0.785398163397448309616
 #endif
 
+#ifndef M_PI_6
+#define M_PI_6     0.52359877559
+#endif
+
 #ifndef M_PI_8
 #define M_PI_8     0.5 * M_PI_4
 #endif
@@ -94,8 +98,7 @@ void HexapodServer::run()
             int servoId = atoi(command[0].c_str());
             int pwm = atoi(command[1].c_str());
             servoId = servosMap[servoId];
-            std::cout<<servoId - 1<<" "<<((float)pwm)/3000.0f<<std::endl;
-            hexapod->setServoPercentValue(0, servoId - 1, ((float)pwm)/3000.0f);
+            hexapod->setServoPercentValue(0, servoId - 1, ((float)(pwm-1500))/2500.0f + 0.5f);
         }
         serverSocket.send(request, ZMQ_SNDMORE);
     }
@@ -249,7 +252,7 @@ public:
             hingeC = new btHingeConstraint(*m_bodies[0], *m_bodies[3+3*i], localA, localB);
             m_joints[2+3*i] = hingeC;
             hingeC->enableMotor(true);
-            hingeC->setLimit(-M_PI_8*0.7,M_PI_8*0.7);
+            hingeC->setLimit(-M_PI_6,M_PI_6);
             hingeC->setMaxMotorImpulse(1000);
             m_ownerWorld->addConstraint(m_joints[2+3*i], true);
             // hip joints 2
@@ -268,7 +271,7 @@ public:
             //hingeC->setLimit(btScalar(-0.1), btScalar(0.1));
             m_joints[3*i] = hingeC;
             hingeC->enableMotor(true);
-            hingeC->setLimit(M_PI_8,3*M_PI_8);
+            hingeC->setLimit(M_PI_6,3*M_PI_6);
             hingeC->setMaxMotorImpulse(1000);
             m_ownerWorld->addConstraint(m_joints[3*i], true);
 
@@ -288,7 +291,7 @@ public:
             //hingeC->setLimit(btScalar(-0.01), btScalar(0.01));
             m_joints[1+3*i] = hingeC;
             hingeC->enableMotor(true);
-            hingeC->setLimit(-M_PI_4,0);
+            hingeC->setLimit(-M_PI_6 - M_PI_4,M_PI_6 - M_PI_4);
             hingeC->setMaxMotorImpulse(1000);
             m_ownerWorld->addConstraint(m_joints[1+3*i], true);
         }
