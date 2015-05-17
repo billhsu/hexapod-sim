@@ -100,7 +100,7 @@ void HexapodServer::run()
             servoId = servosMap[servoId];
             float anglePercent = (float)(pwm-500)/2000.0f;
             // flip angles for left part
-            if(servoId<=9 && servoId%3 != 1) {
+            if(servoId>9 && servoId%3 != 0) {
                 anglePercent =  1 - anglePercent;
             }
             hexapod->setServoPercentValue(0, servoId - 1, anglePercent);
@@ -296,7 +296,7 @@ public:
             //hingeC->setLimit(btScalar(-0.01), btScalar(0.01));
             m_joints[1+3*i] = hingeC;
             hingeC->enableMotor(true);
-            hingeC->setLimit(-M_PI_6 - M_PI_4,M_PI_6 - M_PI_4);
+            hingeC->setLimit(M_PI_6 - M_PI_4, -M_PI_6 - M_PI_4);
             hingeC->setMaxMotorImpulse(1000);
             m_ownerWorld->addConstraint(m_joints[1+3*i], true);
         }

@@ -10,6 +10,6 @@ text.each_line do |line|
   line=line.gsub(/T.*$/, "")
   print "#{line_num += 1} #{line}"
   sock.write line
-  sleep 0.8
+  sleep 0.4
 end
 sock.close
