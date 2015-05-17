@@ -98,7 +98,12 @@ void HexapodServer::run()
             int servoId = atoi(command[0].c_str());
             int pwm = atoi(command[1].c_str());
             servoId = servosMap[servoId];
-            hexapod->setServoPercentValue(0, servoId - 1, ((float)(pwm-1500))/2500.0f + 0.5f);
+            float anglePercent = (float)(pwm-500)/2000.0f;
+            // flip angles for left part
+            if(servoId<=9 && servoId%3 != 1) {
+                anglePercent =  1 - anglePercent;
+            }
+            hexapod->setServoPercentValue(0, servoId - 1, anglePercent);
         }
         serverSocket.send(request, ZMQ_SNDMORE);
     }
