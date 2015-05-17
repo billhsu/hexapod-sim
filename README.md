@@ -39,5 +39,6 @@ Save the commands in a file(e.g. testData.txt)
 
 Then run the following command
 ```
+cd Hexapod
 ./run_command.rb testData.txt
 ```
