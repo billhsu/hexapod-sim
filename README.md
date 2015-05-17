@@ -21,7 +21,9 @@ cd Hexapod
 telnet localhost 5555
 #{servoId}P{PWM}  
 ```
-{servoId} is from 1 to 18, {PWM} is from 0 to 3000.
+{servoId} is from 1 to 9 and from 32 to 24, {PWM} is from 0 to 3000.
+
+You can config the servo mapping in Hexapod/config.txt.
 
 Sample
 ```
