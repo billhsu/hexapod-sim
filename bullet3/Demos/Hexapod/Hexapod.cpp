@@ -146,13 +146,14 @@ public:
         float fBodySize  = 0.45f;
         float fLegLength = 0.45f;
         float fForeLegLength = 0.75f;
+        float fCoxaLength = 0.15f;
         m_shapes[0] = new btBoxShape(btVector3(0.4,0.1,0.6));
         int i;
         for ( i=0; i<NUM_LEGS; i++)
         {
             m_shapes[1 + 3*i] = new btCapsuleShape(btScalar(0.10), btScalar(fLegLength));
             m_shapes[2 + 3*i] = new btCapsuleShape(btScalar(0.08), btScalar(fForeLegLength));
-            m_shapes[3 + 3*i] = new btCapsuleShape(btScalar(0.08), btScalar(fLegLength));
+            m_shapes[3 + 3*i] = new btCapsuleShape(btScalar(0.08), btScalar(fCoxaLength));
         }
 
         //
