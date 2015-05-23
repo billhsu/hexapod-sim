@@ -99,6 +99,9 @@ void HexapodServer::run()
             int pwm = atoi(command[1].c_str());
             servoId = servosMap[servoId];
             float anglePercent = (float)(pwm-500)/2000.0f;
+            float offset = anglePercent - 0.5f;
+            // exaggerate anglePercent
+            anglePercent = sin(offset * M_PI_2) + 0.5f;
             // flip angles for left part
             if(servoId>9 && servoId%3 != 0) {
                 anglePercent =  1 - anglePercent;
