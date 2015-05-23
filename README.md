@@ -1,7 +1,6 @@
 # Hexapod Simulator
 A simulator for Hexapods.  
-[Demo video](https://www.youtube.com/watch?v=JohDGAX7GWw)
-
+[![Demo video](http://img.youtube.com/vi/59QpA3tUnTU/0.jpg)](http://www.youtube.com/watch?v=59QpA3tUnTU)
 
 ## How to build
 
@@ -21,14 +20,15 @@ cd Hexapod
 telnet localhost 5555
 #{servoId}P{PWM}  
 ```
-{servoId} is from 1 to 9 and from 32 to 24, {PWM} is from 0 to 3000.
-
-You can config the servo mapping in Hexapod/config.txt.
+{servoId} is from 1 to 9 and from 32 to 24, {PWM} is from 500 to 2500.
 
 Sample
 ```
 #1P1500#2P3000
 ```
+
+You can config the servo mapping in Hexapod/config.txt.
+
 
 # How to run multiple commands
 Save the commands in a file(e.g. testData.txt)
@@ -44,3 +44,6 @@ Then run the following command
 cd Hexapod
 ./run_command.rb testData.txt
 ```
+
+# Screenshot
+![Screenshot](screenshots/screenshot.png)
