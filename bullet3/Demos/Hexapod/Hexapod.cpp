@@ -261,7 +261,7 @@ public:
             hingeC = new btHingeConstraint(*m_bodies[0], *m_bodies[3+3*i], localA, localB);
             m_joints[2+3*i] = hingeC;
             hingeC->enableMotor(true);
-            hingeC->setLimit(-M_PI_6,M_PI_6);
+            hingeC->setLimit(M_PI_6,-M_PI_6);
             hingeC->setMaxMotorImpulse(1000);
             m_ownerWorld->addConstraint(m_joints[2+3*i], true);
             // hip joints 2
